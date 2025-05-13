@@ -22,7 +22,7 @@ export function Creators() {
     const fetchCreators = async () => {
       try {
         setLoading(true);
-        const response = await fetch('http://localhost:3000/api/creators', {
+        const response = await fetch('/api/creators', {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',

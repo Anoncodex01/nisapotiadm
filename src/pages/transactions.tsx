@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { useStore } from '@/store';
-import { formatTZS, formatDate } from '@/lib/utils';
+import { useStore } from '../store';
+import { formatTZS, formatDate } from '../lib/utils';
 import { DollarSign, Activity, Wallet } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -37,7 +37,7 @@ export function Transactions() {
 
   const fetchWithdrawals = async () => {
     try {
-      const response = await fetch('http://localhost:3000/api/withdrawals');
+      const response = await fetch('/api/withdrawals');
       if (!response.ok) {
         throw new Error('Failed to fetch withdrawals');
       }
@@ -55,7 +55,7 @@ export function Transactions() {
   const updateStatus = async (id: string, newStatus: string) => {
     setUpdatingId(id);
     try {
-      const response = await fetch(`http://localhost:3000/api/withdrawals/${id}/status`, {
+      const response = await fetch(`/api/withdrawals/${id}/status`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

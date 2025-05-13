@@ -74,10 +74,10 @@ export function Dashboard() {
   const fetchDashboardData = async (range: TimeRange) => {
     try {
       setLoading(true);
-      const creatorsResponse = await fetch(`http://localhost:3000/api/creators?timeRange=${range}`);
+      const creatorsResponse = await fetch(`/api/creators?timeRange=${range}`);
       if (!creatorsResponse.ok) throw new Error('Failed to fetch creators data');
       const creatorsData = await creatorsResponse.json();
-      const withdrawalsResponse = await fetch(`http://localhost:3000/api/withdrawals?timeRange=${range}`);
+      const withdrawalsResponse = await fetch(`/api/withdrawals?timeRange=${range}`);
       if (!withdrawalsResponse.ok) throw new Error('Failed to fetch withdrawals data');
       const withdrawalsData = await withdrawalsResponse.json();
       const activeCreators = creatorsData.filter((c: any) => c.total_earnings > 0).length;
