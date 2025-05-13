@@ -4,6 +4,7 @@ const cors = require('cors');
 const adminRoutes = require('./routes/admin');
 const path = require('path');
 require('dotenv').config();
+const jwt = require('jsonwebtoken');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -53,6 +54,18 @@ if (isProduction) {
 // Mount admin routes
 app.use('/api/admin', adminRoutes);
 
+// JWT authentication middleware
+function authenticateToken(req, res, next) {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  if (!token) return res.sendStatus(401);
+  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+    if (err) return res.sendStatus(403);
+    req.user = user;
+    next();
+  });
+}
+
 // Function to handle database queries
 async function queryDatabase(query, params = []) {
   try {
@@ -64,44 +77,32 @@ async function queryDatabase(query, params = []) {
   }
 }
 
-// Get all creators
-app.get('/api/creators', async (req, res) => {
+// Protect all sensitive API endpoints
+app.get('/api/creators', authenticateToken, async (req, res) => {
   try {
     const creators = await queryDatabase(`
       SELECT 
-        p.*,
-        u.email,
-        u.email_verified,
+        p.id,
+        p.display_name,
+        p.category,
         CAST(COALESCE(SUM(s.amount), 0) AS DECIMAL(10,2)) as total_earnings,
         COUNT(DISTINCT s.id) as total_supporters
       FROM profiles p
-      LEFT JOIN users u ON p.user_id = u.id
       LEFT JOIN supporters s ON p.user_id = s.creator_id AND s.status = 'COMPLETED'
-      GROUP BY p.id, p.user_id, p.username, p.display_name, p.creator_url, 
-               p.avatar_url, p.bio, p.category, p.website, u.email, u.email_verified
+      GROUP BY p.id, p.display_name, p.category
     `);
-
-    const transformedCreators = creators.map(creator => ({
-      ...creator,
-      total_earnings: parseFloat(creator.total_earnings || 0),
-      total_supporters: parseInt(creator.total_supporters || 0)
-    }));
-
-    res.json(transformedCreators);
+    res.json(creators);
   } catch (error) {
     console.error('Database error:', error);
     res.status(500).json({ message: 'Database query failed', error: String(error) });
   }
 });
 
-// Get all supporters
-app.get('/api/supporters', async (req, res) => {
+app.get('/api/supporters', authenticateToken, async (req, res) => {
   try {
     const supporters = await queryDatabase(`
       SELECT 
         s.id,
-        s.name,
-        s.phone,
         s.amount,
         s.status,
         s.created_at,
@@ -111,21 +112,35 @@ app.get('/api/supporters', async (req, res) => {
       LEFT JOIN profiles p ON s.creator_id = p.user_id
       ORDER BY s.created_at DESC
     `);
-
-    const transformedSupporters = supporters.map(supporter => ({
-      ...supporter,
-      amount: parseFloat(supporter.amount || 0)
-    }));
-
-    res.json(transformedSupporters);
+    res.json(supporters);
   } catch (error) {
     console.error('Database error:', error);
     res.status(500).json({ message: 'Database query failed', error: String(error) });
   }
 });
 
-// Get dashboard statistics
-app.get('/api/dashboard/stats', async (req, res) => {
+app.get('/api/withdrawals', authenticateToken, async (req, res) => {
+  try {
+    const withdrawals = await queryDatabase(`
+      SELECT 
+        w.id,
+        w.amount,
+        w.status,
+        w.created_at,
+        w.updated_at,
+        p.display_name as creator_name
+      FROM withdrawals w
+      LEFT JOIN profiles p ON w.creator_id = p.user_id
+      ORDER BY w.created_at DESC
+    `);
+    res.json(withdrawals);
+  } catch (error) {
+    console.error('Database error:', error);
+    res.status(500).json({ message: 'Database query failed', error: String(error) });
+  }
+});
+
+app.get('/api/dashboard/stats', authenticateToken, async (req, res) => {
   try {
     // Get total creators
     const totalCreatorsResult = await queryDatabase(`
@@ -240,54 +255,6 @@ app.get('/api/dashboard/stats', async (req, res) => {
   } catch (error) {
     console.error('Database error:', error);
     res.status(500).json({ message: 'Failed to fetch dashboard stats', error: String(error) });
-  }
-});
-
-// Get all withdrawals
-app.get('/api/withdrawals', async (req, res) => {
-  try {
-    // Get withdrawals with creator info
-    const withdrawals = await queryDatabase(`
-      SELECT 
-        w.*,
-        p.display_name as creator_name
-      FROM withdrawals w
-      LEFT JOIN profiles p ON w.creator_id = p.user_id
-      ORDER BY w.created_at DESC
-    `);
-
-    // Get total paid out
-    const totalPaidOutResult = await queryDatabase(`
-      SELECT COALESCE(SUM(amount), 0) as total_paid_out
-      FROM withdrawals
-      WHERE status = 'COMPLETED'
-    `);
-
-    // Get pending withdrawals total
-    const pendingWithdrawalsResult = await queryDatabase(`
-      SELECT COALESCE(SUM(amount), 0) as pending_withdrawals
-      FROM withdrawals
-      WHERE status = 'PENDING'
-    `);
-
-    const totalPaidOut = parseFloat(totalPaidOutResult[0].total_paid_out);
-    const pendingWithdrawals = parseFloat(pendingWithdrawalsResult[0].pending_withdrawals);
-
-    const transformedWithdrawals = withdrawals.map(withdrawal => ({
-      ...withdrawal,
-      amount: parseFloat(withdrawal.amount || 0)
-    }));
-
-    res.json({
-      withdrawals: transformedWithdrawals,
-      summary: {
-        total_withdrawn: totalPaidOut,
-        pending_withdrawals: pendingWithdrawals
-      }
-    });
-  } catch (error) {
-    console.error('Database error:', error);
-    res.status(500).json({ message: 'Database query failed', error: String(error) });
   }
 });
 
