@@ -24,7 +24,7 @@ export default function Supporters() {
     const fetchSupporters = async () => {
       try {
         setLoading(true);
-        const response = await fetch('http://localhost:3000/api/supporters');
+        const response = await fetch('/api/supporters');
         if (!response.ok) {
           throw new Error('Failed to fetch supporters');
         }
