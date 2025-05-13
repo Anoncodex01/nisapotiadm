@@ -12,8 +12,8 @@ import {
   Legend
 } from 'chart.js';
 import { Users, Activity, DollarSign, Wallet, TrendingUp, CreditCard } from 'lucide-react';
-import { useStore } from '@/store';
-import { formatTZS } from '@/lib/utils';
+import { useStore } from '../store';
+import { formatTZS } from '../lib/utils';
 
 ChartJS.register(
   CategoryScale,
@@ -28,12 +28,25 @@ ChartJS.register(
 
 type TimeRange = 'day' | '7d' | '30d' | 'all';
 
+interface ChartData {
+  labels: string[];
+  datasets: {
+    label: string;
+    data: number[];
+    borderColor?: string;
+    backgroundColor?: string;
+    borderWidth?: number;
+    tension?: number;
+    fill?: boolean;
+  }[];
+}
+
 export function Dashboard() {
   const { stats, setStats } = useStore();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [timeRange, setTimeRange] = useState<TimeRange>('30d');
-  const [chartData, setChartData] = useState({
+  const [chartData, setChartData] = useState<{ revenue: ChartData; creators: ChartData }>({
     revenue: {
       labels: [],
       datasets: [{
@@ -61,54 +74,35 @@ export function Dashboard() {
   const fetchDashboardData = async (range: TimeRange) => {
     try {
       setLoading(true);
-
-      // Fetch creators data with time range
       const creatorsResponse = await fetch(`http://localhost:3000/api/creators?timeRange=${range}`);
       if (!creatorsResponse.ok) throw new Error('Failed to fetch creators data');
       const creatorsData = await creatorsResponse.json();
-      
-      // Fetch withdrawals data with time range
       const withdrawalsResponse = await fetch(`http://localhost:3000/api/withdrawals?timeRange=${range}`);
       if (!withdrawalsResponse.ok) throw new Error('Failed to fetch withdrawals data');
       const withdrawalsData = await withdrawalsResponse.json();
-
-      // Calculate statistics
-      const activeCreators = creatorsData.filter(c => c.total_earnings > 0).length;
-      const totalRevenue = creatorsData.reduce((sum, creator) => sum + (creator.total_earnings || 0), 0);
-      
-      // Get date range for chart
+      const activeCreators = creatorsData.filter((c: any) => c.total_earnings > 0).length;
+      const totalRevenue = creatorsData.reduce((sum: number, creator: any) => sum + (creator.total_earnings || 0), 0);
       const startDate = new Date();
       if (range === '7d') startDate.setDate(startDate.getDate() - 7);
       else if (range === '30d') startDate.setDate(startDate.getDate() - 30);
-      else startDate.setMonth(startDate.getMonth() - 6); // Show 6 months for 'all'
-      
-      // Group creators by date
-      const dailyCreators = creatorsData.reduce((acc, creator) => {
+      else if (range === 'day') startDate.setHours(0, 0, 0, 0);
+      else startDate.setMonth(startDate.getMonth() - 6);
+      const dailyCreators = creatorsData.reduce((acc: Record<string, number>, creator: any) => {
         const createdAt = new Date(creator.created_at);
         if (createdAt >= startDate) {
-          const dateKey = createdAt.toLocaleDateString('default', { 
-            month: 'short',
-            day: range !== 'all' ? 'numeric' : undefined
-          });
+          const dateKey = createdAt.toLocaleDateString('default', { month: 'short', day: range !== 'all' ? 'numeric' : undefined });
           acc[dateKey] = (acc[dateKey] || 0) + 1;
         }
         return acc;
       }, {});
-
-      // Calculate daily revenue from withdrawals
-      const dailyRevenue = withdrawalsData.withdrawals.reduce((acc, withdrawal) => {
+      const dailyRevenue = withdrawalsData.withdrawals.reduce((acc: Record<string, number>, withdrawal: any) => {
         const createdAt = new Date(withdrawal.created_at);
         if (createdAt >= startDate && withdrawal.status === 'COMPLETED') {
-          const dateKey = createdAt.toLocaleDateString('default', { 
-            month: 'short',
-            day: range !== 'all' ? 'numeric' : undefined
-          });
+          const dateKey = createdAt.toLocaleDateString('default', { month: 'short', day: range !== 'all' ? 'numeric' : undefined });
           acc[dateKey] = (acc[dateKey] || 0) + withdrawal.amount;
         }
         return acc;
       }, {});
-
-      // Update store with stats
       setStats({
         total_creators: creatorsData.length,
         active_creators: activeCreators,
@@ -120,8 +114,6 @@ export function Dashboard() {
           revenue: ((withdrawalsData.summary.total_withdrawn / totalRevenue) * 100).toFixed(1)
         }
       });
-
-      // Get all dates in range
       const dates = [...new Set([
         ...Object.keys(dailyCreators),
         ...Object.keys(dailyRevenue)
@@ -130,8 +122,6 @@ export function Dashboard() {
         const dateB = new Date(b);
         return dateA.getTime() - dateB.getTime();
       });
-
-      // Update chart data
       setChartData({
         revenue: {
           labels: dates,
@@ -148,7 +138,6 @@ export function Dashboard() {
           }]
         }
       });
-
       setLoading(false);
     } catch (err) {
       console.error('Error fetching dashboard data:', err);
