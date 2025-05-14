@@ -23,6 +23,9 @@ export default function Login() {
       const data = await response.json();
 
       if (response.ok) {
+        if (data.token) {
+          localStorage.setItem('token', data.token);
+        }
         localStorage.setItem('isAuthenticated', 'true');
         navigate('/dashboard');
       } else {
