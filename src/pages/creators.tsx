@@ -53,10 +53,11 @@ export function Creators() {
     fetchCreators();
   }, [setCreators]);
 
-  const totalEarnings = creators.reduce((sum: number, creator: Creator) => sum + (creator.total_earnings || 0), 0);
-  const activeCreators = creators.length;
+  const creatorsArray: Creator[] = Array.isArray(creators) ? creators : [];
+  const totalEarnings = creatorsArray.reduce((sum: number, creator: Creator) => sum + (Number(creator.total_earnings) || 0), 0);
+  const activeCreators = creatorsArray.length;
 
-  let filteredCreators = creators.filter((creator: Creator) => 
+  let filteredCreators = creatorsArray.filter((creator: Creator) => 
     creator.display_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     creator.username?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     creator.category?.toLowerCase().includes(searchQuery.toLowerCase())
@@ -72,7 +73,7 @@ export function Creators() {
 
   // Calculate new creators (joined in last 30 days)
   const now = new Date();
-  const newCreatorsCount = creators.filter((c: Creator) => {
+  const newCreatorsCount = creatorsArray.filter((c: Creator) => {
     if (!c.created_at) return false;
     const created = new Date(c.created_at);
     return (now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24) <= 30;
@@ -164,7 +165,7 @@ export function Creators() {
             </div>
             <div>
               <p className="text-sm text-gray-600">Total Creators</p>
-              <p className="text-2xl font-bold text-gray-900">{creators.length}</p>
+              <p className="text-2xl font-bold text-gray-900">{creatorsArray.length}</p>
             </div>
           </div>
         </div>

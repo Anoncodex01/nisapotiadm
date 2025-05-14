@@ -25,8 +25,13 @@ export default function Supporters() {
       try {
         setLoading(true);
         const token = localStorage.getItem('token');
+        const headers: Record<string, string> = {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        };
+        if (token) headers['Authorization'] = `Bearer ${token}`;
         const response = await fetch('/api/supporters', {
-          headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+          headers,
         });
         if (!response.ok) {
           throw new Error('Failed to fetch supporters');
@@ -44,11 +49,12 @@ export default function Supporters() {
     fetchSupporters();
   }, []);
 
-  const totalAmount = supporters.reduce((sum, supporter) => 
-    supporter.status === 'completed' ? sum + supporter.amount : sum, 0
+  const supportersArray: Supporter[] = Array.isArray(supporters) ? supporters : [];
+  const totalAmount = supportersArray.reduce((sum: number, supporter: Supporter) => 
+    supporter.status === 'completed' ? sum + (Number(supporter.amount) || 0) : sum, 0
   );
 
-  const filteredSupporters = supporters.filter(supporter => 
+  const filteredSupporters = supportersArray.filter((supporter: Supporter) => 
     supporter.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     supporter.phone?.includes(searchQuery)
   );
@@ -182,7 +188,7 @@ export default function Supporters() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 bg-white">
-              {filteredSupporters.map((supporter) => (
+              {filteredSupporters.map((supporter: Supporter) => (
                 <tr key={supporter.id} className="hover:bg-gray-50 transition-colors">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900">{supporter.name}</div>

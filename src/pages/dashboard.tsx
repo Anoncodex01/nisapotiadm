@@ -75,26 +75,31 @@ export function Dashboard() {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      const creatorsHeaders: Record<string, string> = token ? { 'Authorization': `Bearer ${token}` } : {};
+      const headers: Record<string, string> = {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
       const creatorsResponse = await fetch(`/api/creators?timeRange=${range}`, {
-        headers: creatorsHeaders,
+        headers,
       });
       if (!creatorsResponse.ok) throw new Error('Failed to fetch creators data');
       const creatorsData = await creatorsResponse.json();
-      const withdrawalsHeaders: Record<string, string> = token ? { 'Authorization': `Bearer ${token}` } : {};
       const withdrawalsResponse = await fetch(`/api/withdrawals?timeRange=${range}`, {
-        headers: withdrawalsHeaders,
+        headers,
       });
       if (!withdrawalsResponse.ok) throw new Error('Failed to fetch withdrawals data');
       const withdrawalsData = await withdrawalsResponse.json();
-      const activeCreators = creatorsData.filter((c: any) => c.total_earnings > 0).length;
-      const totalRevenue = creatorsData.reduce((sum: number, creator: any) => sum + (creator.total_earnings || 0), 0);
+      const creatorsArray: any[] = Array.isArray(creatorsData) ? creatorsData : [];
+      const withdrawalsArray: any[] = Array.isArray(withdrawalsData.withdrawals) ? withdrawalsData.withdrawals : [];
+      const activeCreators = creatorsArray.filter((c: any) => c.total_earnings > 0).length;
+      const totalRevenue = creatorsArray.reduce((sum: number, creator: any) => sum + (Number(creator.total_earnings) || 0), 0);
       const startDate = new Date();
       if (range === '7d') startDate.setDate(startDate.getDate() - 7);
       else if (range === '30d') startDate.setDate(startDate.getDate() - 30);
       else if (range === 'day') startDate.setHours(0, 0, 0, 0);
       else startDate.setMonth(startDate.getMonth() - 6);
-      const dailyCreators = creatorsData.reduce((acc: Record<string, number>, creator: any) => {
+      const dailyCreators = creatorsArray.reduce((acc: Record<string, number>, creator: any) => {
         const createdAt = new Date(creator.created_at);
         if (createdAt >= startDate) {
           const dateKey = createdAt.toLocaleDateString('default', { month: 'short', day: range !== 'all' ? 'numeric' : undefined });
@@ -102,7 +107,7 @@ export function Dashboard() {
         }
         return acc;
       }, {});
-      const dailyRevenue = withdrawalsData.withdrawals.reduce((acc: Record<string, number>, withdrawal: any) => {
+      const dailyRevenue = withdrawalsArray.reduce((acc: Record<string, number>, withdrawal: any) => {
         const createdAt = new Date(withdrawal.created_at);
         if (createdAt >= startDate && withdrawal.status === 'COMPLETED') {
           const dateKey = createdAt.toLocaleDateString('default', { month: 'short', day: range !== 'all' ? 'numeric' : undefined });
@@ -111,13 +116,13 @@ export function Dashboard() {
         return acc;
       }, {});
       setStats({
-        total_creators: creatorsData.length,
+        total_creators: creatorsArray.length,
         active_creators: activeCreators,
         total_revenue: totalRevenue,
         pending_payouts: withdrawalsData.summary.pending_withdrawals,
         total_paid_out: withdrawalsData.summary.total_withdrawn,
         growth: {
-          creators: ((activeCreators / creatorsData.length) * 100).toFixed(1),
+          creators: ((activeCreators / creatorsArray.length) * 100).toFixed(1),
           revenue: ((withdrawalsData.summary.total_withdrawn / totalRevenue) * 100).toFixed(1)
         }
       });

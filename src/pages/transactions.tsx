@@ -38,8 +38,13 @@ export function Transactions() {
   const fetchWithdrawals = async () => {
     try {
       const token = localStorage.getItem('token');
+      const headers: Record<string, string> = {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
       const response = await fetch('/api/withdrawals', {
-        headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+        headers,
       });
       if (!response.ok) {
         throw new Error('Failed to fetch withdrawals');
@@ -59,12 +64,14 @@ export function Transactions() {
     setUpdatingId(id);
     try {
       const token2 = localStorage.getItem('token');
+      const headers2: Record<string, string> = {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      };
+      if (token2) headers2['Authorization'] = `Bearer ${token2}`;
       const response2 = await fetch(`/api/withdrawals/${id}/status`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token2 ? { 'Authorization': `Bearer ${token2}` } : {}),
-        },
+        headers: headers2,
         body: JSON.stringify({ status: newStatus }),
       });
 
@@ -87,7 +94,8 @@ export function Transactions() {
   }, []);
 
   // Calculate total fees collected (10% of each withdrawal amount)
-  const totalFees = withdrawals.reduce((sum, w) => sum + (w.amount || 0) * 0.1, 0);
+  const withdrawalsArray: Withdrawal[] = Array.isArray(withdrawals) ? withdrawals : [];
+  const totalFees = withdrawalsArray.reduce((sum: number, w: Withdrawal) => sum + (Number(w.amount) || 0) * 0.1, 0);
 
   return (
     <div className="max-w-7xl mx-auto">
@@ -181,7 +189,7 @@ export function Transactions() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
-                  {withdrawals.map((withdrawal) => (
+                  {withdrawalsArray.map((withdrawal: Withdrawal) => (
                     <tr key={withdrawal.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-medium text-gray-900">#{withdrawal.id.slice(0, 8)}</div>
