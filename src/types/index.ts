@@ -12,6 +12,7 @@ export interface Creator {
   email_verified: boolean;
   total_earnings: number;
   total_supporters: number;
+  created_at?: string;
 }
 
 export interface Transaction {

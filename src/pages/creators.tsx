@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
-import { useStore } from '@/store';
-import { formatTZS, getAvatarUrl } from '@/lib/utils';
+import { useStore } from '../store';
+import { formatTZS, getAvatarUrl } from '../lib/utils';
 import { Users, Activity, DollarSign, Search, Eye, ExternalLink } from 'lucide-react';
-import type { Creator } from '@/types';
-import { CreatorModal } from '@/components/CreatorModal';
+import type { Creator } from '../types';
+import { CreatorModal } from '../components/CreatorModal';
 import { format } from 'date-fns';
 
 export function Creators() {
@@ -22,12 +22,15 @@ export function Creators() {
     const fetchCreators = async () => {
       try {
         setLoading(true);
+        const token = localStorage.getItem('token');
+        const headers: Record<string, string> = {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        };
+        if (token) headers['Authorization'] = `Bearer ${token}`;
         const response = await fetch('/api/creators', {
           method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-          },
+          headers,
         });
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
@@ -50,26 +53,26 @@ export function Creators() {
     fetchCreators();
   }, [setCreators]);
 
-  const totalEarnings = creators.reduce((sum, creator) => sum + (creator.total_earnings || 0), 0);
+  const totalEarnings = creators.reduce((sum: number, creator: Creator) => sum + (creator.total_earnings || 0), 0);
   const activeCreators = creators.length;
 
-  let filteredCreators = creators.filter(creator => 
+  let filteredCreators = creators.filter((creator: Creator) => 
     creator.display_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     creator.username?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     creator.category?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   if (filter === 'top-supporters') {
-    filteredCreators = [...filteredCreators].sort((a, b) => (b.total_supporters || 0) - (a.total_supporters || 0)).slice(0, 10);
+    filteredCreators = [...filteredCreators].sort((a: Creator, b: Creator) => (b.total_supporters || 0) - (a.total_supporters || 0)).slice(0, 10);
   } else if (filter === 'top-earnings') {
-    filteredCreators = [...filteredCreators].sort((a, b) => (b.total_earnings || 0) - (a.total_earnings || 0)).slice(0, 10);
+    filteredCreators = [...filteredCreators].sort((a: Creator, b: Creator) => (b.total_earnings || 0) - (a.total_earnings || 0)).slice(0, 10);
   } else if (filter === 'new') {
-    filteredCreators = [...filteredCreators].sort((a, b) => b.id.localeCompare(a.id)); // If you have created_at, use that instead
+    filteredCreators = [...filteredCreators].sort((a: Creator, b: Creator) => b.id.localeCompare(a.id)); // If you have created_at, use that instead
   }
 
   // Calculate new creators (joined in last 30 days)
   const now = new Date();
-  const newCreatorsCount = creators.filter(c => {
+  const newCreatorsCount = creators.filter((c: Creator) => {
     if (!c.created_at) return false;
     const created = new Date(c.created_at);
     return (now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24) <= 30;
@@ -80,12 +83,12 @@ export function Creators() {
   const paginatedCreators = filteredCreators.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   // Bulk selection logic
-  const allSelected = paginatedCreators.length > 0 && paginatedCreators.every(c => selectedIds.includes(c.id));
+  const allSelected = paginatedCreators.length > 0 && paginatedCreators.every((c: Creator) => selectedIds.includes(c.id));
   const toggleSelectAll = () => {
     if (allSelected) {
-      setSelectedIds(selectedIds.filter(id => !paginatedCreators.some(c => c.id === id)));
+      setSelectedIds(selectedIds.filter(id => !paginatedCreators.some((c: Creator) => c.id === id)));
     } else {
-      setSelectedIds([...selectedIds, ...paginatedCreators.filter(c => !selectedIds.includes(c.id)).map(c => c.id)]);
+      setSelectedIds([...selectedIds, ...paginatedCreators.filter((c: Creator) => !selectedIds.includes(c.id)).map((c: Creator) => c.id)]);
     }
   };
   const toggleSelectOne = (id: string) => {
@@ -233,7 +236,7 @@ export function Creators() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 bg-white">
-              {paginatedCreators.map((creator) => (
+              {paginatedCreators.map((creator: Creator) => (
                 <tr key={creator.id} className="hover:bg-gray-50 transition-colors">
                   <td className="px-4 py-4">
                     <input type="checkbox" checked={selectedIds.includes(creator.id)} onChange={() => toggleSelectOne(creator.id)} />
@@ -243,7 +246,7 @@ export function Creators() {
                       <div className="h-10 w-10 rounded-xl overflow-hidden">
                         {creator.avatar_url ? (
                           <img
-                            src={getAvatarUrl(creator.avatar_url)}
+                            src={getAvatarUrl(creator.avatar_url) || undefined}
                             alt={creator.display_name}
                             className="h-full w-full object-cover"
                           />

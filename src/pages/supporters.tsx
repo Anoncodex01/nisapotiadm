@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { formatTZS } from '@/lib/utils';
+import { formatTZS } from '../lib/utils';
 import { Users, Activity, DollarSign, Search, CheckCircle2, XCircle, Clock } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -24,7 +24,10 @@ export default function Supporters() {
     const fetchSupporters = async () => {
       try {
         setLoading(true);
-        const response = await fetch('/api/supporters');
+        const token = localStorage.getItem('token');
+        const response = await fetch('/api/supporters', {
+          headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+        });
         if (!response.ok) {
           throw new Error('Failed to fetch supporters');
         }

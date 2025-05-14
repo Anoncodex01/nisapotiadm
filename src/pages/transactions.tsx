@@ -37,7 +37,10 @@ export function Transactions() {
 
   const fetchWithdrawals = async () => {
     try {
-      const response = await fetch('/api/withdrawals');
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/withdrawals', {
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+      });
       if (!response.ok) {
         throw new Error('Failed to fetch withdrawals');
       }
@@ -55,15 +58,17 @@ export function Transactions() {
   const updateStatus = async (id: string, newStatus: string) => {
     setUpdatingId(id);
     try {
-      const response = await fetch(`/api/withdrawals/${id}/status`, {
+      const token2 = localStorage.getItem('token');
+      const response2 = await fetch(`/api/withdrawals/${id}/status`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          ...(token2 ? { 'Authorization': `Bearer ${token2}` } : {}),
         },
         body: JSON.stringify({ status: newStatus }),
       });
 
-      if (!response.ok) {
+      if (!response2.ok) {
         throw new Error('Failed to update status');
       }
 
