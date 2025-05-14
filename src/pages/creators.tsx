@@ -225,10 +225,10 @@ export function Creators() {
           <table className="min-w-full divide-y divide-gray-200">
             <thead>
               <tr className="bg-gray-50">
-                <th className="px-4 py-3">
-                  <input type="checkbox" checked={allSelected} onChange={toggleSelectAll} />
-                </th>
+                <th className="px-4 py-3">ID</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Username</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Earnings</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Supporters</th>
@@ -239,9 +239,7 @@ export function Creators() {
             <tbody className="divide-y divide-gray-200 bg-white">
               {paginatedCreators.map((creator: Creator) => (
                 <tr key={creator.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-4 py-4">
-                    <input type="checkbox" checked={selectedIds.includes(creator.id)} onChange={() => toggleSelectOne(creator.id)} />
-                  </td>
+                  <td className="px-4 py-4">{creator.id}</td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       <div className="h-10 w-10 rounded-xl overflow-hidden">
@@ -259,24 +257,19 @@ export function Creators() {
                       </div>
                       <div className="ml-4">
                         <div className="text-sm font-medium text-gray-900">{creator.display_name}</div>
-                        <div className="text-xs text-gray-500">@{creator.username}</div>
                       </div>
                     </div>
                   </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-500">@{creator.username || '-'}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-500">{creator.email || '-'}</td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
                       {creator.category || 'Uncategorized'}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
-                    {formatTZS(creator.total_earnings || 0)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
-                    {creator.total_supporters || 0}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
-                    {creator.created_at ? format(new Date(creator.created_at), 'MMM d, yyyy') : '-'}
-                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">{formatTZS(creator.total_earnings || 0)}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">{creator.total_supporters || 0}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">{creator.created_at ? format(new Date(creator.created_at), 'MMM d, yyyy') : '-'}</td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center gap-3">
                       <button

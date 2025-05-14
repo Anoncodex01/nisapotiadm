@@ -191,13 +191,13 @@ export default function Supporters() {
               {filteredSupporters.map((supporter: Supporter) => (
                 <tr key={supporter.id} className="hover:bg-gray-50 transition-colors">
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">{supporter.name}</div>
+                    <div className="text-sm font-medium text-gray-900">{supporter.name || '-'}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-500">{supporter.phone}</div>
+                    <div className="text-sm text-gray-500">{supporter.phone || '-'}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    {formatTZS(supporter.amount)}
+                    {formatTZS(Number(supporter.amount) || 0)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-900">{supporter.creator_name || 'Unknown Creator'}</div>
@@ -211,7 +211,7 @@ export default function Supporters() {
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {format(new Date(supporter.created_at), 'MMM d, yyyy HH:mm')}
+                    {supporter.created_at ? format(new Date(supporter.created_at), 'MMM d, yyyy HH:mm') : '-'}
                   </td>
                 </tr>
               ))}

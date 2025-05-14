@@ -167,7 +167,7 @@ export function Transactions() {
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
               <p className="mt-2 text-sm text-gray-600">Loading transactions...</p>
             </div>
-          ) : withdrawals.length === 0 ? (
+          ) : withdrawalsArray.length === 0 ? (
             <div className="text-center py-8">
               <p className="text-gray-600">No transactions found</p>
             </div>
@@ -215,7 +215,7 @@ export function Transactions() {
                         <div className="text-sm font-medium text-gray-900">{formatTZS((withdrawal.amount || 0) * 0.9)}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {formatDate(withdrawal.created_at)}
+                        {withdrawal.created_at ? formatDate(withdrawal.created_at) : '-'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${

@@ -115,15 +115,16 @@ export function Dashboard() {
         }
         return acc;
       }, {});
+      const summary = withdrawalsData && withdrawalsData.summary ? withdrawalsData.summary : { pending_withdrawals: 0, total_withdrawn: 0 };
       setStats({
         total_creators: creatorsArray.length,
         active_creators: activeCreators,
         total_revenue: totalRevenue,
-        pending_payouts: withdrawalsData.summary.pending_withdrawals,
-        total_paid_out: withdrawalsData.summary.total_withdrawn,
+        pending_payouts: summary.pending_withdrawals || 0,
+        total_paid_out: summary.total_withdrawn || 0,
         growth: {
           creators: ((activeCreators / creatorsArray.length) * 100).toFixed(1),
-          revenue: ((withdrawalsData.summary.total_withdrawn / totalRevenue) * 100).toFixed(1)
+          revenue: ((summary.total_withdrawn / (totalRevenue || 1)) * 100).toFixed(1)
         }
       });
       const dates = [...new Set([
