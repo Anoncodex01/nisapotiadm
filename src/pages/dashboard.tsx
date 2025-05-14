@@ -105,10 +105,18 @@ export function Dashboard() {
         }
         return acc;
       }, {});
-      const dailyRevenue = withdrawalsData.withdrawals.reduce((acc: Record<string, number>, withdrawal: any) => {
+      const withdrawalsArr = Array.isArray(withdrawalsData.withdrawals)
+        ? withdrawalsData.withdrawals
+        : Array.isArray(withdrawalsData)
+          ? withdrawalsData
+          : [];
+      const dailyRevenue = withdrawalsArr.reduce((acc: Record<string, number>, withdrawal: any) => {
         const createdAt = new Date(withdrawal.created_at);
         if (createdAt >= startDate && withdrawal.status === 'COMPLETED') {
-          const dateKey = createdAt.toLocaleDateString('default', { month: 'short', day: range !== 'all' ? 'numeric' : undefined });
+          const dateKey = createdAt.toLocaleDateString('default', { 
+            month: 'short',
+            day: range !== 'all' ? 'numeric' : undefined
+          });
           acc[dateKey] = (acc[dateKey] || 0) + withdrawal.amount;
         }
         return acc;
