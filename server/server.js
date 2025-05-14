@@ -140,18 +140,13 @@ app.get('/api/supporters', authenticateToken, async (req, res) => {
 // Get all withdrawals
 app.get('/api/withdrawals', authenticateToken, async (req, res) => {
   try {
-    // Get withdrawals with creator info and payment details
+    // Get withdrawals with creator info
     const withdrawals = await queryDatabase(`
       SELECT 
-        w.*, 
-        p.display_name as creator_name,
-        u.phone as phone_number,
-        u.full_name,
-        u.bank_name,
-        u.account_number
+        w.*,
+        p.display_name as creator_name
       FROM withdrawals w
       LEFT JOIN profiles p ON w.creator_id = p.user_id
-      LEFT JOIN users u ON w.creator_id = u.id
       ORDER BY w.created_at DESC
     `);
 
