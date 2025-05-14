@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { formatTZS } from '../lib/utils';
+import { formatTZS } from '@/lib/utils';
 import { Users, Activity, DollarSign, Search, CheckCircle2, XCircle, Clock } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -25,13 +25,10 @@ export default function Supporters() {
       try {
         setLoading(true);
         const token = localStorage.getItem('token');
-        const headers: Record<string, string> = {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-        };
-        if (token) headers['Authorization'] = `Bearer ${token}`;
         const response = await fetch('/api/supporters', {
-          headers,
+          headers: {
+            ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+          }
         });
         if (!response.ok) {
           throw new Error('Failed to fetch supporters');
@@ -49,12 +46,11 @@ export default function Supporters() {
     fetchSupporters();
   }, []);
 
-  const supportersArray: Supporter[] = Array.isArray(supporters) ? supporters : [];
-  const totalAmount = supportersArray.reduce((sum: number, supporter: Supporter) => 
-    supporter.status === 'completed' ? sum + (Number(supporter.amount) || 0) : sum, 0
+  const totalAmount = supporters.reduce((sum, supporter) => 
+    supporter.status === 'completed' ? sum + supporter.amount : sum, 0
   );
 
-  const filteredSupporters = supportersArray.filter((supporter: Supporter) => 
+  const filteredSupporters = supporters.filter(supporter => 
     supporter.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     supporter.phone?.includes(searchQuery)
   );
@@ -188,16 +184,16 @@ export default function Supporters() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 bg-white">
-              {filteredSupporters.map((supporter: Supporter) => (
+              {filteredSupporters.map((supporter) => (
                 <tr key={supporter.id} className="hover:bg-gray-50 transition-colors">
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">{supporter.name || '-'}</div>
+                    <div className="text-sm font-medium text-gray-900">{supporter.name}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-500">{supporter.phone || '-'}</div>
+                    <div className="text-sm text-gray-500">{supporter.phone}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    {formatTZS(Number(supporter.amount) || 0)}
+                    {formatTZS(supporter.amount)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-900">{supporter.creator_name || 'Unknown Creator'}</div>
@@ -211,7 +207,7 @@ export default function Supporters() {
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {supporter.created_at ? format(new Date(supporter.created_at), 'MMM d, yyyy HH:mm') : '-'}
+                    {format(new Date(supporter.created_at), 'MMM d, yyyy HH:mm')}
                   </td>
                 </tr>
               ))}

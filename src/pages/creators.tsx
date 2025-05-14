@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
-import { useStore } from '../store';
-import { formatTZS, getAvatarUrl } from '../lib/utils';
+import { useStore } from '@/store';
+import { formatTZS, getAvatarUrl } from '@/lib/utils';
 import { Users, Activity, DollarSign, Search, Eye, ExternalLink } from 'lucide-react';
-import type { Creator } from '../types';
-import { CreatorModal } from '../components/CreatorModal';
+import type { Creator } from '@/types';
+import { CreatorModal } from '@/components/CreatorModal';
 import { format } from 'date-fns';
 
 export function Creators() {
@@ -23,14 +23,13 @@ export function Creators() {
       try {
         setLoading(true);
         const token = localStorage.getItem('token');
-        const headers: Record<string, string> = {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        };
-        if (token) headers['Authorization'] = `Bearer ${token}`;
         const response = await fetch('/api/creators', {
           method: 'GET',
-          headers,
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+          },
         });
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
@@ -53,27 +52,26 @@ export function Creators() {
     fetchCreators();
   }, [setCreators]);
 
-  const creatorsArray: Creator[] = Array.isArray(creators) ? creators : [];
-  const totalEarnings = creatorsArray.reduce((sum: number, creator: Creator) => sum + (Number(creator.total_earnings) || 0), 0);
-  const activeCreators = creatorsArray.length;
+  const totalEarnings = creators.reduce((sum, creator) => sum + (creator.total_earnings || 0), 0);
+  const activeCreators = creators.length;
 
-  let filteredCreators = creatorsArray.filter((creator: Creator) => 
+  let filteredCreators = creators.filter(creator => 
     creator.display_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     creator.username?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     creator.category?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   if (filter === 'top-supporters') {
-    filteredCreators = [...filteredCreators].sort((a: Creator, b: Creator) => (b.total_supporters || 0) - (a.total_supporters || 0)).slice(0, 10);
+    filteredCreators = [...filteredCreators].sort((a, b) => (b.total_supporters || 0) - (a.total_supporters || 0)).slice(0, 10);
   } else if (filter === 'top-earnings') {
-    filteredCreators = [...filteredCreators].sort((a: Creator, b: Creator) => (b.total_earnings || 0) - (a.total_earnings || 0)).slice(0, 10);
+    filteredCreators = [...filteredCreators].sort((a, b) => (b.total_earnings || 0) - (a.total_earnings || 0)).slice(0, 10);
   } else if (filter === 'new') {
-    filteredCreators = [...filteredCreators].sort((a: Creator, b: Creator) => b.id.localeCompare(a.id)); // If you have created_at, use that instead
+    filteredCreators = [...filteredCreators].sort((a, b) => b.id.localeCompare(a.id)); // If you have created_at, use that instead
   }
 
   // Calculate new creators (joined in last 30 days)
   const now = new Date();
-  const newCreatorsCount = creatorsArray.filter((c: Creator) => {
+  const newCreatorsCount = creators.filter(c => {
     if (!c.created_at) return false;
     const created = new Date(c.created_at);
     return (now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24) <= 30;
@@ -84,12 +82,12 @@ export function Creators() {
   const paginatedCreators = filteredCreators.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   // Bulk selection logic
-  const allSelected = paginatedCreators.length > 0 && paginatedCreators.every((c: Creator) => selectedIds.includes(c.id));
+  const allSelected = paginatedCreators.length > 0 && paginatedCreators.every(c => selectedIds.includes(c.id));
   const toggleSelectAll = () => {
     if (allSelected) {
-      setSelectedIds(selectedIds.filter(id => !paginatedCreators.some((c: Creator) => c.id === id)));
+      setSelectedIds(selectedIds.filter(id => !paginatedCreators.some(c => c.id === id)));
     } else {
-      setSelectedIds([...selectedIds, ...paginatedCreators.filter((c: Creator) => !selectedIds.includes(c.id)).map((c: Creator) => c.id)]);
+      setSelectedIds([...selectedIds, ...paginatedCreators.filter(c => !selectedIds.includes(c.id)).map(c => c.id)]);
     }
   };
   const toggleSelectOne = (id: string) => {
@@ -165,7 +163,7 @@ export function Creators() {
             </div>
             <div>
               <p className="text-sm text-gray-600">Total Creators</p>
-              <p className="text-2xl font-bold text-gray-900">{creatorsArray.length}</p>
+              <p className="text-2xl font-bold text-gray-900">{creators.length}</p>
             </div>
           </div>
         </div>
@@ -225,10 +223,10 @@ export function Creators() {
           <table className="min-w-full divide-y divide-gray-200">
             <thead>
               <tr className="bg-gray-50">
-                <th className="px-4 py-3">ID</th>
+                <th className="px-4 py-3">
+                  <input type="checkbox" checked={allSelected} onChange={toggleSelectAll} />
+                </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Username</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Earnings</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Supporters</th>
@@ -237,15 +235,17 @@ export function Creators() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 bg-white">
-              {paginatedCreators.map((creator: Creator) => (
+              {paginatedCreators.map((creator) => (
                 <tr key={creator.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-4 py-4">{creator.id}</td>
+                  <td className="px-4 py-4">
+                    <input type="checkbox" checked={selectedIds.includes(creator.id)} onChange={() => toggleSelectOne(creator.id)} />
+                  </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       <div className="h-10 w-10 rounded-xl overflow-hidden">
                         {creator.avatar_url ? (
                           <img
-                            src={getAvatarUrl(creator.avatar_url) || undefined}
+                            src={getAvatarUrl(creator.avatar_url)}
                             alt={creator.display_name}
                             className="h-full w-full object-cover"
                           />
@@ -257,19 +257,24 @@ export function Creators() {
                       </div>
                       <div className="ml-4">
                         <div className="text-sm font-medium text-gray-900">{creator.display_name}</div>
+                        <div className="text-xs text-gray-500">@{creator.username}</div>
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-500">@{creator.username || '-'}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-500">{creator.email || '-'}</td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
                       {creator.category || 'Uncategorized'}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">{formatTZS(creator.total_earnings || 0)}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">{creator.total_supporters || 0}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">{creator.created_at ? format(new Date(creator.created_at), 'MMM d, yyyy') : '-'}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
+                    {formatTZS(creator.total_earnings || 0)}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
+                    {creator.total_supporters || 0}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
+                    {creator.created_at ? format(new Date(creator.created_at), 'MMM d, yyyy') : '-'}
+                  </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center gap-3">
                       <button

@@ -38,13 +38,10 @@ export function Transactions() {
   const fetchWithdrawals = async () => {
     try {
       const token = localStorage.getItem('token');
-      const headers: Record<string, string> = {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-      };
-      if (token) headers['Authorization'] = `Bearer ${token}`;
       const response = await fetch('/api/withdrawals', {
-        headers,
+        headers: {
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        }
       });
       if (!response.ok) {
         throw new Error('Failed to fetch withdrawals');
@@ -63,19 +60,17 @@ export function Transactions() {
   const updateStatus = async (id: string, newStatus: string) => {
     setUpdatingId(id);
     try {
-      const token2 = localStorage.getItem('token');
-      const headers2: Record<string, string> = {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-      };
-      if (token2) headers2['Authorization'] = `Bearer ${token2}`;
-      const response2 = await fetch(`/api/withdrawals/${id}/status`, {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/withdrawals/${id}/status`, {
         method: 'PUT',
-        headers: headers2,
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
         body: JSON.stringify({ status: newStatus }),
       });
 
-      if (!response2.ok) {
+      if (!response.ok) {
         throw new Error('Failed to update status');
       }
 
@@ -94,8 +89,7 @@ export function Transactions() {
   }, []);
 
   // Calculate total fees collected (10% of each withdrawal amount)
-  const withdrawalsArray: Withdrawal[] = Array.isArray(withdrawals) ? withdrawals : [];
-  const totalFees = withdrawalsArray.reduce((sum: number, w: Withdrawal) => sum + (Number(w.amount) || 0) * 0.1, 0);
+  const totalFees = withdrawals.reduce((sum, w) => sum + (w.amount || 0) * 0.1, 0);
 
   return (
     <div className="max-w-7xl mx-auto">
@@ -167,7 +161,7 @@ export function Transactions() {
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
               <p className="mt-2 text-sm text-gray-600">Loading transactions...</p>
             </div>
-          ) : withdrawalsArray.length === 0 ? (
+          ) : withdrawals.length === 0 ? (
             <div className="text-center py-8">
               <p className="text-gray-600">No transactions found</p>
             </div>
@@ -189,7 +183,7 @@ export function Transactions() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
-                  {withdrawalsArray.map((withdrawal: Withdrawal) => (
+                  {withdrawals.map((withdrawal) => (
                     <tr key={withdrawal.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-medium text-gray-900">#{withdrawal.id.slice(0, 8)}</div>
@@ -215,7 +209,7 @@ export function Transactions() {
                         <div className="text-sm font-medium text-gray-900">{formatTZS((withdrawal.amount || 0) * 0.9)}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {withdrawal.created_at ? formatDate(withdrawal.created_at) : '-'}
+                        {formatDate(withdrawal.created_at)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
