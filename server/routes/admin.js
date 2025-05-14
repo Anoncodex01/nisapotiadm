@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
 const pool = require('../db');
+const jwt = require('jsonwebtoken');
 
 // Create admin table if it doesn't exist
 async function createAdminTable() {
@@ -61,7 +62,13 @@ router.post('/login', async (req, res) => {
         return res.status(401).json({ error: 'Invalid credentials' });
       }
 
-      res.json({ success: true });
+      // Generate JWT token
+      const token = jwt.sign(
+        { id: admin.id, email: admin.email },
+        process.env.JWT_SECRET,
+        { expiresIn: '1d' }
+      );
+      res.json({ token });
     } finally {
       connection.release();
     }
