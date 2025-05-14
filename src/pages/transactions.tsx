@@ -46,9 +46,12 @@ export function Transactions() {
       if (!response.ok) {
         throw new Error('Failed to fetch withdrawals');
       }
-      const data: WithdrawalsResponse = await response.json();
-      setWithdrawals(data.withdrawals);
-      setSummary(data.summary);
+      const data = await response.json();
+      // Support both array and object response
+      const withdrawalsArray = Array.isArray(data) ? data : (Array.isArray(data.withdrawals) ? data.withdrawals : []);
+      const summaryObj = data.summary || { total_withdrawn: 0, pending_withdrawals: 0 };
+      setWithdrawals(withdrawalsArray);
+      setSummary(summaryObj);
     } catch (error) {
       console.error('Error fetching withdrawals:', error);
       toast.error('Failed to load withdrawals');

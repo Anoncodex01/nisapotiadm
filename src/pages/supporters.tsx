@@ -34,7 +34,9 @@ export default function Supporters() {
           throw new Error('Failed to fetch supporters');
         }
         const data = await response.json();
-        setSupporters(data);
+        // Support both array and object response
+        const supportersArray = Array.isArray(data) ? data : (Array.isArray(data.supporters) ? data.supporters : []);
+        setSupporters(supportersArray);
       } catch (err) {
         console.error('Error fetching supporters:', err);
         setError(err instanceof Error ? err.message : 'Failed to fetch supporters');
@@ -46,14 +48,18 @@ export default function Supporters() {
     fetchSupporters();
   }, []);
 
-  const totalAmount = supporters.reduce((sum, supporter) => 
-    supporter.status === 'completed' ? sum + supporter.amount : sum, 0
+  const totalAmount = supporters.reduce(
+    (sum, supporter) =>
+      supporter.status === 'completed' ? sum + (Number(supporter.amount) || 0) : sum,
+    0
   );
 
-  const filteredSupporters = supporters.filter(supporter => 
-    supporter.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    supporter.phone?.includes(searchQuery)
-  );
+  const filteredSupporters = searchQuery
+    ? supporters.filter(supporter =>
+        (supporter.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (supporter.phone || '').includes(searchQuery)
+      )
+    : supporters;
 
   const getStatusIcon = (status: string) => {
     switch (status) {

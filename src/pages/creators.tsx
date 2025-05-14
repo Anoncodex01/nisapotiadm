@@ -246,18 +246,18 @@ export function Creators() {
                         {creator.avatar_url ? (
                           <img
                             src={getAvatarUrl(creator.avatar_url)}
-                            alt={creator.display_name}
+                            alt={creator.display_name || creator.username || '-'}
                             className="h-full w-full object-cover"
                           />
                         ) : (
                           <div className="h-full w-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-medium">
-                            {creator.display_name?.charAt(0)}
+                            {(creator.display_name || creator.username || '-').charAt(0)}
                           </div>
                         )}
                       </div>
                       <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-900">{creator.display_name}</div>
-                        <div className="text-xs text-gray-500">@{creator.username}</div>
+                        <div className="text-sm font-medium text-gray-900">{creator.display_name || '-'}</div>
+                        <div className="text-xs text-gray-500">@{creator.username || '-'}</div>
                       </div>
                     </div>
                   </td>
@@ -285,7 +285,7 @@ export function Creators() {
                         <Eye className="w-5 h-5" />
                       </button>
                       <a
-                        href={`https://nisapoti.com/${creator.username}`}
+                        href={`https://nisapoti.com/${creator.username || ''}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-gray-600 hover:text-gray-900 transition-colors p-1 hover:bg-gray-50 rounded-lg"
