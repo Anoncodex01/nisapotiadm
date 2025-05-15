@@ -4,77 +4,48 @@ const bcrypt = require('bcryptjs');
 const pool = require('../db');
 const jwt = require('jsonwebtoken');
 
-// Create admin table if it doesn't exist
-async function createAdminTable() {
-  const connection = await pool.getConnection();
-  try {
-    await connection.query(`
-      CREATE TABLE IF NOT EXISTS admin (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        email VARCHAR(255) NOT NULL UNIQUE,
-        password VARCHAR(255) NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-      )
-    `);
-
-    // Check if admin exists
-    const [rows] = await connection.query('SELECT * FROM admin WHERE email = ?', ['admin@nisapoti.com']);
-    
-    if (rows.length === 0) {
-      // Hash the password
-      const hashedPassword = await bcrypt.hash('Nisapoti@#202516', 10);
-      
-      // Insert default admin
-      await connection.query(
-        'INSERT INTO admin (email, password) VALUES (?, ?)',
-        ['admin@nisapoti.com', hashedPassword]
-      );
-    }
-  } finally {
-    connection.release();
-  }
-}
-
-// Initialize admin table
-createAdminTable().catch(console.error);
-
 // Login endpoint
 router.post('/login', async (req, res) => {
   const { email, password } = req.body;
-  
+  if (!email || !password)
+    return res.status(400).json({ message: 'Email and password are required.' });
+
   try {
     const connection = await pool.getConnection();
     try {
       const [rows] = await connection.query(
-        'SELECT * FROM admin WHERE email = ?',
+        'SELECT * FROM admin_users WHERE email = ? AND is_active = 1 LIMIT 1',
         [email]
       );
+      if (rows.length === 0)
+        return res.status(401).json({ message: 'Invalid credentials' });
 
-      if (rows.length === 0) {
-        return res.status(401).json({ error: 'Invalid credentials' });
-      }
+      const user = rows[0];
+      const isMatch = await bcrypt.compare(password, user.password_hash);
+      if (!isMatch)
+        return res.status(401).json({ message: 'Invalid credentials' });
 
-      const admin = rows[0];
-      const isValid = await bcrypt.compare(password, admin.password);
-      
-      if (!isValid) {
-        return res.status(401).json({ error: 'Invalid credentials' });
-      }
-
-      // Generate JWT token
+      // Issue JWT
       const token = jwt.sign(
-        { id: admin.id, email: admin.email },
+        { id: user.id, email: user.email, name: user.name },
         process.env.JWT_SECRET,
-        { expiresIn: '1d' }
+        { expiresIn: '2h' }
       );
-      res.json({ token });
+
+      res.json({
+        token,
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name
+        }
+      });
     } finally {
       connection.release();
     }
   } catch (error) {
     console.error('Login error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
