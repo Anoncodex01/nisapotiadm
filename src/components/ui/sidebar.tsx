@@ -2,7 +2,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Home, Users, CreditCard, Settings, DollarSign, LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-export function Sidebar() {
+export function Sidebar({ open, onClose }: { open?: boolean; onClose?: () => void }) {
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -65,70 +65,97 @@ export function Sidebar() {
   ];
 
   return (
-    <div className="fixed inset-y-0 left-0 w-80 bg-white border-r border-gray-100 shadow-sm">
-      {/* Logo Section */}
-      <div className="flex items-center gap-3 px-6 py-8 border-b border-gray-50">
-        <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-pink-500 rounded-xl flex items-center justify-center">
-          <span className="text-xl font-bold text-white">N</span>
-        </div>
-        <div>
-          <h1 className="text-xl font-semibold bg-gradient-to-r from-orange-600 to-pink-600 bg-clip-text text-transparent">
-            Nisapoti
-          </h1>
-          <p className="text-xs text-gray-500">Admin Dashboard</p>
-        </div>
-      </div>
-
-      {/* Navigation */}
-      <div className="p-4">
-        <nav className="space-y-1">
-          {navItems.map((item) => (
-            <Link
-              key={item.href}
-              to={item.href}
-              className={cn(
-                "flex items-center gap-3 px-4 py-3.5 rounded-xl text-gray-700 transition-all duration-300 group",
-                item.hoverColor,
-                location.pathname === item.href && "bg-orange-50 text-orange-600"
-              )}
+    <>
+      {/* Overlay for mobile */}
+      {open && (
+        <div className="fixed inset-0 z-40 bg-black/30 sm:hidden" onClick={onClose}></div>
+      )}
+      <div
+        className={
+          cn(
+            "fixed inset-y-0 left-0 z-50 bg-white border-r border-gray-100 shadow-sm transition-transform duration-300",
+            "w-72 sm:w-80",
+            open ? "translate-x-0" : "-translate-x-full",
+            "sm:translate-x-0 sm:block",
+            !open && "sm:translate-x-0 sm:block hidden"
+          )
+        }
+        style={{ maxWidth: '100vw' }}
+      >
+        {/* Logo Section */}
+        <div className="flex items-center gap-3 px-6 py-8 border-b border-gray-50 relative">
+          <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-pink-500 rounded-xl flex items-center justify-center">
+            <span className="text-xl font-bold text-white">N</span>
+          </div>
+          <div>
+            <h1 className="text-xl font-semibold bg-gradient-to-r from-orange-600 to-pink-600 bg-clip-text text-transparent">
+              Nisapoti
+            </h1>
+            <p className="text-xs text-gray-500">Admin Dashboard</p>
+          </div>
+          {/* Close button for mobile */}
+          {onClose && (
+            <button
+              className="absolute right-4 top-4 sm:hidden text-gray-400 hover:text-gray-700"
+              onClick={onClose}
+              aria-label="Close sidebar"
             >
-              <div className={cn(
-                "w-10 h-10 rounded-lg flex items-center justify-center transition-colors",
-                item.bgColor
-              )}>
-                <item.icon className={cn("w-5 h-5", item.textColor)} />
-              </div>
-              <div>
-                <span className="font-medium">{item.title}</span>
-                <p className={cn(
-                  "text-xs text-gray-500",
-                  item.groupHoverColor
-                )}>{item.description}</p>
-              </div>
-            </Link>
-          ))}
-        </nav>
-      </div>
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+          )}
+        </div>
 
-      {/* User Profile Section */}
-      <div className="absolute bottom-0 left-0 right-0 p-4">
-        <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl">
-          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-orange-500 to-pink-500 flex items-center justify-center">
-            <span className="text-sm font-bold text-white">A</span>
+        {/* Navigation */}
+        <div className="p-4">
+          <nav className="space-y-1">
+            {navItems.map((item) => (
+              <Link
+                key={item.href}
+                to={item.href}
+                className={cn(
+                  "flex items-center gap-3 px-4 py-3.5 rounded-xl text-gray-700 transition-all duration-300 group",
+                  item.hoverColor,
+                  location.pathname === item.href && "bg-orange-50 text-orange-600"
+                )}
+              >
+                <div className={cn(
+                  "w-10 h-10 rounded-lg flex items-center justify-center transition-colors",
+                  item.bgColor
+                )}>
+                  <item.icon className={cn("w-5 h-5", item.textColor)} />
+                </div>
+                <div>
+                  <span className="font-medium">{item.title}</span>
+                  <p className={cn(
+                    "text-xs text-gray-500",
+                    item.groupHoverColor
+                  )}>{item.description}</p>
+                </div>
+              </Link>
+            ))}
+          </nav>
+        </div>
+
+        {/* User Profile Section */}
+        <div className="absolute bottom-0 left-0 right-0 p-4">
+          <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl">
+            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-orange-500 to-pink-500 flex items-center justify-center">
+              <span className="text-sm font-bold text-white">A</span>
+            </div>
+            <div className="flex-1">
+              <h3 className="text-sm font-medium text-gray-900">Admin User</h3>
+              <p className="text-xs text-gray-500">admin@nisapoti.com</p>
+            </div>
+            <button 
+              onClick={handleLogout}
+              className="w-8 h-8 rounded-lg bg-white shadow-sm flex items-center justify-center text-gray-400 hover:text-red-600 transition-colors"
+              title="Logout"
+            >
+              <LogOut className="w-5 h-5" />
+            </button>
           </div>
-          <div className="flex-1">
-            <h3 className="text-sm font-medium text-gray-900">Admin User</h3>
-            <p className="text-xs text-gray-500">admin@nisapoti.com</p>
-          </div>
-          <button 
-            onClick={handleLogout}
-            className="w-8 h-8 rounded-lg bg-white shadow-sm flex items-center justify-center text-gray-400 hover:text-red-600 transition-colors"
-            title="Logout"
-          >
-            <LogOut className="w-5 h-5" />
-          </button>
         </div>
       </div>
-    </div>
+    </>
   );
 }

@@ -7,6 +7,7 @@ import Supporters from '@/pages/supporters';
 import { Transactions } from '@/pages/transactions';
 import { Settings } from '@/pages/settings';
 import { Toaster } from 'sonner';
+import { useState } from 'react';
 
 const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
   const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
@@ -16,11 +17,29 @@ const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
 const AppLayout = () => {
   const location = useLocation();
   const isLoginPage = location.pathname === '/login';
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
     <>
-      {!isLoginPage && <Sidebar />}
-      <div className={!isLoginPage ? "ml-80 p-8" : ""}>
+      {/* Mobile Header */}
+      {!isLoginPage && (
+        <div className="sm:hidden flex items-center justify-between px-4 py-3 bg-white border-b border-gray-100 shadow-sm sticky top-0 z-40">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-pink-500 rounded-xl flex items-center justify-center">
+              <span className="text-lg font-bold text-white">N</span>
+            </div>
+            <span className="text-lg font-semibold bg-gradient-to-r from-orange-600 to-pink-600 bg-clip-text text-transparent">Nisapoti</span>
+          </div>
+          <button onClick={() => setSidebarOpen(true)} className="text-gray-500 focus:outline-none" aria-label="Open menu">
+            <svg className="w-7 h-7" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" /></svg>
+          </button>
+        </div>
+      )}
+      {/* Sidebar */}
+      {!isLoginPage && (
+        <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      )}
+      <div className={!isLoginPage ? "sm:ml-80 p-2 sm:p-8 transition-all" : ""}>
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route
