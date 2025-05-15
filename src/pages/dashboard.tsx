@@ -226,18 +226,18 @@ export function Dashboard() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto">
+    <div className="max-w-7xl mx-auto px-2 sm:px-4 py-4 sm:py-8">
       {/* Header Section */}
-      <div className="flex justify-between items-center mb-8">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 sm:mb-8 gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Dashboard Overview</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Dashboard Overview</h1>
           <p className="text-gray-600">Welcome back, Admin!</p>
         </div>
-        <div className="flex items-center gap-3">
-          <div className="inline-flex rounded-lg border border-gray-100 bg-white p-1 shadow-sm">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">
+          <div className="inline-flex rounded-lg border border-gray-100 bg-white p-1 shadow-sm w-full sm:w-auto">
             <button 
               onClick={() => setTimeRange('day')}
-              className={`inline-block rounded-md px-4 py-2 text-sm transition-all duration-200 ${
+              className={`inline-block rounded-md px-2 sm:px-4 py-2 text-xs sm:text-sm transition-all duration-200 w-1/4 sm:w-auto ${
                 timeRange === 'day' 
                   ? 'bg-purple-100 text-purple-700' 
                   : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
@@ -247,7 +247,7 @@ export function Dashboard() {
             </button>
             <button 
               onClick={() => setTimeRange('7d')}
-              className={`inline-block rounded-md px-4 py-2 text-sm transition-all duration-200 ${
+              className={`inline-block rounded-md px-2 sm:px-4 py-2 text-xs sm:text-sm transition-all duration-200 w-1/4 sm:w-auto ${
                 timeRange === '7d' 
                   ? 'bg-purple-100 text-purple-700' 
                   : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
@@ -257,7 +257,7 @@ export function Dashboard() {
             </button>
             <button 
               onClick={() => setTimeRange('30d')}
-              className={`inline-block rounded-md px-4 py-2 text-sm transition-all duration-200 ${
+              className={`inline-block rounded-md px-2 sm:px-4 py-2 text-xs sm:text-sm transition-all duration-200 w-1/4 sm:w-auto ${
                 timeRange === '30d' 
                   ? 'bg-purple-100 text-purple-700' 
                   : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
@@ -267,7 +267,7 @@ export function Dashboard() {
             </button>
             <button 
               onClick={() => setTimeRange('all')}
-              className={`inline-block rounded-md px-4 py-2 text-sm transition-all duration-200 ${
+              className={`inline-block rounded-md px-2 sm:px-4 py-2 text-xs sm:text-sm transition-all duration-200 w-1/4 sm:w-auto ${
                 timeRange === 'all' 
                   ? 'bg-purple-100 text-purple-700' 
                   : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
@@ -276,29 +276,29 @@ export function Dashboard() {
               All Time
             </button>
           </div>
-          <span className="px-4 py-2 bg-orange-100 text-orange-800 rounded-lg text-sm font-medium">
+          <span className="px-2 sm:px-4 py-2 bg-orange-100 text-orange-800 rounded-lg text-xs sm:text-sm font-medium w-full sm:w-auto text-center">
             {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
           </span>
         </div>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-6 sm:mb-8">
         {statCards.map((card) => (
           <div key={card.title} className="group relative overflow-hidden bg-white rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-100">
-            <div className="p-5 relative">
+            <div className="p-4 sm:p-5 relative">
               <div className="flex items-center justify-between">
-                <div className={`w-12 h-12 ${card.bgColor} rounded-xl flex items-center justify-center transform group-hover:scale-110 transition-transform`}>
-                  <card.icon className="w-6 h-6 text-white" />
+                <div className={`w-10 h-10 sm:w-12 sm:h-12 ${card.bgColor} rounded-xl flex items-center justify-center transform group-hover:scale-110 transition-transform`}>
+                  <card.icon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                 </div>
                 <div className="flex items-center space-x-1">
                   <TrendingUp className={`w-4 h-4 ${card.textColor}`} />
                   <span className={`text-xs font-semibold ${card.textColor}`}>{card.growth}</span>
                 </div>
               </div>
-              <div className="mt-4">
-                <h3 className="text-sm font-medium text-gray-500">{card.title}</h3>
-                <p className="text-2xl font-bold text-gray-900 mt-1">{card.value}</p>
+              <div className="mt-3 sm:mt-4">
+                <h3 className="text-xs sm:text-sm font-medium text-gray-500">{card.title}</h3>
+                <p className="text-lg sm:text-2xl font-bold text-gray-900 mt-1">{card.value}</p>
               </div>
             </div>
           </div>
@@ -306,16 +306,16 @@ export function Dashboard() {
       </div>
 
       {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-8">Revenue Overview</h2>
-          <div className="h-[300px]">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-3 sm:p-6">
+          <h2 className="text-base sm:text-lg font-semibold text-gray-900 mb-4 sm:mb-8">Revenue Overview</h2>
+          <div className="h-[200px] sm:h-[300px] overflow-x-auto">
             <Line data={chartData.revenue} options={{ maintainAspectRatio: false }} />
           </div>
         </div>
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-8">Creator Growth</h2>
-          <div className="h-[300px]">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-3 sm:p-6">
+          <h2 className="text-base sm:text-lg font-semibold text-gray-900 mb-4 sm:mb-8">Creator Growth</h2>
+          <div className="h-[200px] sm:h-[300px] overflow-x-auto">
             <Bar data={chartData.creators} options={{ maintainAspectRatio: false }} />
           </div>
         </div>
