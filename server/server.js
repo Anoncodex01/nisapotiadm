@@ -217,7 +217,7 @@ app.get('/api/wishlist', authenticateToken, async (req, res) => {
       is_priority: Boolean(item.is_priority),
       hashtags: item.hashtags,
       created_at: item.created_at,
-      images: Array.isArray(item.images) ? item.images : JSON.parse(item.images || '[]'),
+      images: typeof item.images === 'string' ? JSON.parse(item.images || '[]') : (item.images || []),
       creator: {
         user_id: item.creator_user_id,
         name: item.creator_name,
