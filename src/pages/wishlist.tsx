@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useStore } from '@/store';
 import { formatTZS } from '@/lib/utils';
+import { getAvatarUrl } from '@/lib/utils';
 import { Gift, DollarSign, Activity, Search, Eye, ExternalLink, X } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -351,7 +352,11 @@ export function Wishlist() {
             {/* Creator info */}
             {selectedItem.creator && (
               <div className="flex items-center gap-4 mb-4 mt-2">
-                <img src={selectedItem.creator.avatar || '/creator/assets/default_avatar.png'} className="w-12 h-12 rounded-full border-2 border-orange-200 shadow" alt="Creator Avatar" />
+                <img
+                  src={getAvatarUrl(selectedItem.creator.avatar ?? null) || '/creator/assets/default_avatar.png'}
+                  className="w-12 h-12 rounded-full border-2 border-orange-200 shadow"
+                  alt="Creator Avatar"
+                />
                 <div>
                   <div className="font-bold text-lg text-gray-900">{selectedItem.creator.name}</div>
                   <div className="text-sm text-gray-500">{selectedItem.creator.bio}</div>
