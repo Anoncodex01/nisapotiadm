@@ -192,7 +192,7 @@ app.get('/api/wishlist', authenticateToken, async (req, res) => {
       SELECT
         w.*,
         GROUP_CONCAT(wi.image_url) AS images,
-        p.name AS creator_name,
+        p.display_name AS creator_name,
         p.avatar_url AS creator_avatar,
         p.bio AS creator_bio,
         p.user_id AS creator_user_id,
