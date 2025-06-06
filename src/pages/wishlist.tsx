@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useStore } from '@/store';
 import { formatTZS } from '@/lib/utils';
-import { Gift, DollarSign, Activity, Search, Eye, ExternalLink } from 'lucide-react';
+import { Gift, DollarSign, Activity, Search, Eye, ExternalLink, X } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface WishlistItem {
@@ -17,6 +17,12 @@ interface WishlistItem {
   amount_funded: number;
   created_at: string;
   images: string[];
+  creator?: {
+    avatar?: string;
+    name: string;
+    bio: string;
+  };
+  supporter_count: number;
 }
 
 export function Wishlist() {
@@ -27,6 +33,8 @@ export function Wishlist() {
   const [filter, setFilter] = useState<'all' | 'priority' | 'funded' | 'new'>('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(10);
+  const [selectedItem, setSelectedItem] = useState<WishlistItem | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
 
   useEffect(() => {
     fetchWishlistData();
@@ -103,6 +111,9 @@ export function Wishlist() {
   // Pagination logic
   const totalPages = Math.ceil(filteredItems.length / pageSize);
   const paginatedItems = filteredItems.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
+  // Helper to truncate text
+  const truncate = (str: string, n: number) => (str.length > n ? str.slice(0, n) + '...' : str);
 
   return (
     <div className="max-w-7xl mx-auto px-2 sm:px-4 py-4 sm:py-8">
@@ -226,7 +237,7 @@ export function Wishlist() {
                         )}
                       </div>
                       <div>
-                        <div className="font-medium text-gray-900">{item.name}</div>
+                        <div className="font-medium text-gray-900">{truncate(item.name, 40)}</div>
                         <div className="text-gray-500 text-xs truncate max-w-[200px]">{item.description}</div>
                       </div>
                     </div>
@@ -269,9 +280,9 @@ export function Wishlist() {
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center gap-3">
                       <button
-                        onClick={() => window.open(item.link, '_blank')}
+                        onClick={() => { setSelectedItem(item); setModalOpen(true); }}
                         className="text-blue-600 hover:text-blue-900 transition-colors p-1 hover:bg-blue-50 rounded-lg"
-                        title="View Item"
+                        title="View Details"
                       >
                         <Eye className="w-5 h-5" />
                       </button>
@@ -292,6 +303,94 @@ export function Wishlist() {
           </table>
         </div>
       </div>
+
+      {/* Modal for wishlist details */}
+      {modalOpen && selectedItem && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+          <div className="bg-white rounded-2xl shadow-xl max-w-2xl w-full p-6 relative">
+            <button
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-2xl"
+              onClick={() => setModalOpen(false)}
+            >
+              <X />
+            </button>
+            {/* Images carousel/gallery */}
+            <div className="flex gap-4 mb-4">
+              {selectedItem.images && selectedItem.images.length > 0 ? (
+                <div className="flex gap-2 overflow-x-auto">
+                  {selectedItem.images.map((img, idx) => (
+                    <img
+                      key={idx}
+                      src={img}
+                      alt={selectedItem.name}
+                      className="w-24 h-24 object-cover rounded-lg border"
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="w-24 h-24 flex items-center justify-center bg-gray-200 rounded-lg">
+                  <Gift className="w-8 h-8 text-gray-400" />
+                </div>
+              )}
+            </div>
+            {/* Title and description */}
+            <div className="mb-2 text-2xl font-bold text-gray-900">{selectedItem.name}</div>
+            <div className="mb-2 text-gray-700 text-base leading-relaxed">{selectedItem.description}</div>
+            {/* Hashtags */}
+            {selectedItem.hashtags && (
+              <div className="mb-2 flex flex-wrap gap-2">
+                {selectedItem.hashtags.split(',').map((tag, idx) => (
+                  <span key={idx} className="px-2 py-0.5 rounded-full border text-xs font-medium border-orange-400 text-orange-600 bg-orange-50">
+                    {tag.trim()}
+                  </span>
+                ))}
+              </div>
+            )}
+            {/* Creator info */}
+            {selectedItem.creator && (
+              <div className="flex items-center gap-4 mb-4 mt-2">
+                <img src={selectedItem.creator.avatar || '/creator/assets/default_avatar.png'} className="w-12 h-12 rounded-full border-2 border-orange-200 shadow" alt="Creator Avatar" />
+                <div>
+                  <div className="font-bold text-lg text-gray-900">{selectedItem.creator.name}</div>
+                  <div className="text-sm text-gray-500">{selectedItem.creator.bio}</div>
+                </div>
+              </div>
+            )}
+            {/* Funding info */}
+            <div className="flex flex-col sm:flex-row gap-4 mb-4">
+              <div>
+                <div className="text-gray-500 text-xs">Amount Funded</div>
+                <div className="text-lg font-bold text-green-600">{formatTZS(selectedItem.amount_funded)}</div>
+              </div>
+              <div>
+                <div className="text-gray-500 text-xs">Supporters</div>
+                <div className="text-lg font-bold text-orange-600">{selectedItem.supporter_count}</div>
+              </div>
+              <div>
+                <div className="text-gray-500 text-xs">Target</div>
+                <div className="text-lg font-bold text-blue-600">{formatTZS(selectedItem.price)}</div>
+              </div>
+            </div>
+            {/* Progress bar */}
+            <div className="w-full mb-2">
+              <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden">
+                <div
+                  className="h-3 rounded-full transition-all duration-300"
+                  style={{ width: `${Math.min(100, (selectedItem.amount_funded / selectedItem.price) * 100)}%`, background: '#f97316' }}
+                ></div>
+              </div>
+            </div>
+            <div className="flex justify-end mt-4">
+              <button
+                className="px-4 py-2 rounded-lg text-white bg-orange-500 hover:bg-orange-600 font-semibold"
+                onClick={() => setModalOpen(false)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Pagination Controls */}
       {totalPages > 1 && (

@@ -191,17 +191,17 @@ app.get('/api/wishlist', authenticateToken, async (req, res) => {
     const wishlistItems = await queryDatabase(`
       SELECT
         w.*,
-        GROUP_CONCAT(wi.image_url) AS images,
         p.display_name AS creator_name,
         p.avatar_url AS creator_avatar,
         p.bio AS creator_bio,
         p.user_id AS creator_user_id,
         COALESCE(SUM(CASE WHEN s.status = 'completed' AND s.type = 'wishlist' THEN s.amount ELSE 0 END), 0) AS amount_funded,
-        COUNT(CASE WHEN s.status = 'completed' AND s.type = 'wishlist' THEN s.id ELSE NULL END) AS supporter_count
+        COUNT(CASE WHEN s.status = 'completed' AND s.type = 'wishlist' THEN s.id ELSE NULL END) AS supporter_count,
+        COALESCE(JSON_ARRAYAGG(wi.image_url), JSON_ARRAY()) AS images
       FROM wishlist w
-      LEFT JOIN wishlist_images wi ON w.id = wi.wishlist_id
       LEFT JOIN profiles p ON w.user_id = p.user_id
       LEFT JOIN supporters s ON s.wishlist_id = w.id
+      LEFT JOIN wishlist_images wi ON wi.wishlist_id = w.id
       GROUP BY w.id
       ORDER BY w.created_at DESC
     `);
@@ -217,7 +217,7 @@ app.get('/api/wishlist', authenticateToken, async (req, res) => {
       is_priority: Boolean(item.is_priority),
       hashtags: item.hashtags,
       created_at: item.created_at,
-      images: item.images ? item.images.split(',') : [],
+      images: Array.isArray(item.images) ? item.images : JSON.parse(item.images || '[]'),
       creator: {
         user_id: item.creator_user_id,
         name: item.creator_name,
