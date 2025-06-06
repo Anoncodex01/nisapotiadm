@@ -90,6 +90,13 @@ export function Dashboard() {
       });
       if (!withdrawalsResponse.ok) throw new Error('Failed to fetch withdrawals data');
       const withdrawalsData = await withdrawalsResponse.json();
+      const wishlistStatsResponse = await fetch('/api/wishlist-stats', { headers });
+      const wishlistStats = wishlistStatsResponse.ok ? await wishlistStatsResponse.json() : {
+        total_items: 0,
+        funded_items: 0,
+        total_value: 0,
+        total_funded: 0
+      };
       const activeCreators = creatorsData.filter((c: any) => c.total_earnings > 0).length;
       const totalRevenue = creatorsData.reduce((sum: number, creator: any) => sum + (creator.total_earnings || 0), 0);
       const startDate = new Date();
@@ -131,12 +138,7 @@ export function Dashboard() {
           creators: ((activeCreators / creatorsData.length) * 100).toFixed(1),
           revenue: ((withdrawalsData.summary.total_withdrawn / totalRevenue) * 100).toFixed(1)
         },
-        wishlist: {
-          total_items: 0,
-          funded_items: 0,
-          total_value: 0,
-          total_funded: 0
-        }
+        wishlist: wishlistStats
       });
       const dates = [...new Set([
         ...Object.keys(dailyCreators),

@@ -31,6 +31,17 @@ export interface Stats {
   active_creators: number;
   total_revenue: number;
   pending_payouts: number;
+  total_paid_out?: number;
+  growth?: {
+    creators: string;
+    revenue: string;
+  };
+  wishlist?: {
+    total_items: number;
+    funded_items: number;
+    total_value: number;
+    total_funded: number;
+  };
 }
 
 export interface ChartData {
