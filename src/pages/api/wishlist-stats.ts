@@ -15,7 +15,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   });
 
   try {
-    const [rows] = await connection.query(`
+    const [rows]: any = await connection.query(`
       SELECT
         COUNT(*) AS total_items,
         SUM(price) AS total_value,
@@ -24,7 +24,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       FROM wishlist
     `);
 
-    res.status(200).json(rows[0]);
+    res.status(200).json(rows[0] || {});
   } catch (error) {
     res.status(500).json({ message: 'Database query failed', error: String(error) });
   } finally {
