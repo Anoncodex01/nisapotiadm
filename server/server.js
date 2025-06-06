@@ -188,24 +188,44 @@ app.get('/api/withdrawals', authenticateToken, async (req, res) => {
 // Wishlist API endpoint
 app.get('/api/wishlist', authenticateToken, async (req, res) => {
   try {
-    // Get all wishlist items with their images
     const wishlistItems = await queryDatabase(`
-      SELECT 
+      SELECT
         w.*,
-        GROUP_CONCAT(wi.image_url) as images
+        GROUP_CONCAT(wi.image_url) AS images,
+        p.name AS creator_name,
+        p.avatar_url AS creator_avatar,
+        p.bio AS creator_bio,
+        p.user_id AS creator_user_id,
+        COALESCE(SUM(CASE WHEN s.status = 'completed' AND s.type = 'wishlist' THEN s.amount ELSE 0 END), 0) AS amount_funded,
+        COUNT(CASE WHEN s.status = 'completed' AND s.type = 'wishlist' THEN s.id ELSE NULL END) AS supporter_count
       FROM wishlist w
       LEFT JOIN wishlist_images wi ON w.id = wi.wishlist_id
+      LEFT JOIN profiles p ON w.user_id = p.user_id
+      LEFT JOIN supporters s ON s.wishlist_id = w.id
       GROUP BY w.id
       ORDER BY w.created_at DESC
     `);
 
-    // Format the response
     const formattedItems = wishlistItems.map(item => ({
-      ...item,
-      images: item.images ? item.images.split(',') : [],
+      id: item.id,
+      uuid: item.uuid,
+      name: item.name,
+      category: item.category,
+      price: Number(item.price),
+      description: item.description,
+      link: item.link,
       is_priority: Boolean(item.is_priority),
-      amount_funded: parseFloat(item.amount_funded || 0),
-      price: parseFloat(item.price)
+      hashtags: item.hashtags,
+      created_at: item.created_at,
+      images: item.images ? item.images.split(',') : [],
+      creator: {
+        user_id: item.creator_user_id,
+        name: item.creator_name,
+        avatar: item.creator_avatar,
+        bio: item.creator_bio
+      },
+      amount_funded: Number(item.amount_funded) || 0,
+      supporter_count: Number(item.supporter_count) || 0
     }));
 
     res.json(formattedItems);
