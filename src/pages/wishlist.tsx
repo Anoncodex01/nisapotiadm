@@ -25,6 +25,8 @@ interface WishlistItem {
   supporter_count: number;
 }
 
+const IMAGE_BASE = 'http://studio.nisapoti.com';
+
 export function Wishlist() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -229,7 +231,7 @@ export function Wishlist() {
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-lg bg-gray-100 overflow-hidden">
                         {item.images && item.images[0] ? (
-                          <img src={item.images[0]} alt={item.name} className="w-full h-full object-cover" />
+                          <img src={item.images[0].startsWith('http') ? item.images[0] : IMAGE_BASE + item.images[0]} alt={item.name} className="w-full h-full object-cover" />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center bg-gray-200">
                             <Gift className="w-5 h-5 text-gray-400" />
@@ -321,7 +323,7 @@ export function Wishlist() {
                   {selectedItem.images.map((img, idx) => (
                     <img
                       key={idx}
-                      src={img}
+                      src={img.startsWith('http') ? img : IMAGE_BASE + img}
                       alt={selectedItem.name}
                       className="w-24 h-24 object-cover rounded-lg border"
                     />
